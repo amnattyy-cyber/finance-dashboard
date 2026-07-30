@@ -2249,3 +2249,238 @@ footer p {
     grid-column: auto;
   }
 }
+
+/* W&W corporate identity: navy, red and clean white surfaces */
+:root {
+  --ink: #171a55;
+  --muted: #68709a;
+  --line: #dfe2f0;
+  --surface: #ffffff;
+  --canvas: #f4f5fb;
+  --sg: #ed1b2f;
+  --sg-dark: #b81228;
+  --ssf: #252979;
+  --ssf-dark: #171a58;
+  --company-navy: #222672;
+  --company-navy-deep: #111442;
+  --company-red: #ed1b2f;
+  --company-red-soft: #fff0f2;
+}
+
+body {
+  background:
+    linear-gradient(180deg, #eef0f8 0, var(--canvas) 340px),
+    var(--canvas);
+}
+
+.hero {
+  background:
+    linear-gradient(118deg, rgba(15, 18, 64, 0.99), rgba(38, 43, 125, 0.96)),
+    var(--company-navy-deep);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 69%, rgba(255, 255, 255, 0.035) 69% 69.35%, transparent 69.35%),
+    linear-gradient(180deg, transparent 0 76%, rgba(237, 27, 47, 0.16) 76% 76.5%, transparent 76.5%);
+}
+
+.hero-glow-red {
+  background: radial-gradient(circle, #f04455 0, transparent 68%);
+}
+
+.hero-glow-blue {
+  background: radial-gradient(circle, #737dd8 0, transparent 68%);
+}
+
+.brand {
+  gap: 15px;
+}
+
+.brand-logo-frame {
+  display: flex;
+  width: 190px;
+  height: 74px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(3, 6, 36, 0.28);
+}
+
+.brand-logo {
+  display: block;
+  width: 174px;
+  height: 68px;
+  object-fit: contain;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-copy strong {
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.11em;
+}
+
+.brand-copy span:last-child {
+  color: #cbd0eb;
+  letter-spacing: 0.02em;
+}
+
+.global-area-filter {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.button-light {
+  color: var(--company-navy);
+  box-shadow: 0 7px 22px rgba(6, 9, 43, 0.2);
+}
+
+.button-ghost:hover,
+.global-area-filter:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.eyebrow {
+  color: #ff8c98;
+}
+
+.eyebrow.dark {
+  color: var(--company-red);
+}
+
+h1 span {
+  background: linear-gradient(90deg, #ffffff 8%, #ff7b88 51%, #aeb7ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.date-card {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.055));
+}
+
+.kpi-card {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.content {
+  position: relative;
+}
+
+.content::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--company-red) 0 20%, var(--company-navy) 20% 100%);
+}
+
+.section-heading h2,
+.panel-title h3,
+.bma-head strong,
+.ranking-panel h3,
+.chart-title h3 {
+  color: var(--company-navy);
+}
+
+.bma-card,
+.panel,
+.executive-chart-panel,
+.ranking-panel,
+.missing-card {
+  border-color: var(--line);
+  box-shadow: 0 11px 35px rgba(28, 32, 100, 0.07);
+}
+
+.bma-card:hover,
+.missing-card:hover {
+  border-color: #b9bfdf;
+  box-shadow: 0 14px 38px rgba(28, 32, 100, 0.11);
+}
+
+.executive-matrix th,
+table thead th {
+  background: linear-gradient(180deg, #2b3084, #1d2168);
+}
+
+.executive-matrix tfoot td {
+  background: var(--company-navy-deep);
+}
+
+.matrix-wrap,
+.table-wrap {
+  border-color: #ccd1e5;
+}
+
+.executive-date,
+.area-label {
+  color: var(--company-navy);
+}
+
+.copy-summary,
+.copy-table {
+  color: #fff;
+  border-color: var(--company-navy);
+  background: var(--company-navy);
+}
+
+.copy-summary:hover,
+.copy-table:hover {
+  background: var(--company-navy-deep);
+}
+
+.zero-count,
+.zero-total {
+  color: var(--sg-dark);
+  background: var(--company-red-soft);
+}
+
+.filters select:focus,
+.search-box:focus-within,
+.global-area-filter select:focus,
+.date-card select:focus {
+  outline: 2px solid rgba(237, 27, 47, 0.34);
+  outline-offset: 2px;
+}
+
+footer {
+  border-top-color: #d5d9ea;
+}
+
+footer strong {
+  color: var(--company-navy);
+}
+
+@media (max-width: 760px) {
+  .brand {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .brand-logo-frame {
+    width: 170px;
+    height: 66px;
+  }
+
+  .brand-logo {
+    width: 158px;
+    height: 61px;
+  }
+}
+
