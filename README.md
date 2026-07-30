@@ -1,4 +1,4 @@
-# Dashboard Finance
+# W&W FINANCE PERFORMANCE BMA
 
 Executive daily dashboard for SG Finance and Samsung Finance across BMA 1–5.
 
