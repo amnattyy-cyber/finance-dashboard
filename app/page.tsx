@@ -639,10 +639,16 @@ export default function Home() {
         <div className="shell hero-content">
           <div className="topbar">
             <div className="brand">
-              <span className="brand-mark">T</span>
-              <div>
-                <strong>TRUE SHOP FINANCE</strong>
-                <span>Daily performance intelligence</span>
+              <span className="brand-logo-frame">
+                <img
+                  className="brand-logo"
+                  src="./assets/ww-logo.svg"
+                  alt="W&W Wire & Wireless Co., Ltd."
+                />
+              </span>
+              <div className="brand-copy">
+                <strong>W&amp;W FINANCE PERFORMANCE</strong>
+                <span>Wire &amp; Wireless Co., Ltd. • Daily intelligence</span>
               </div>
             </div>
             <div className="top-actions">
@@ -1459,8 +1465,8 @@ export default function Home() {
 
         <footer>
           <div>
-            <strong>TRUE SHOP FINANCE DAILY INFOGRAPHIC</strong>
-            <span>SG Finance + Samsung Finance • BMA 1–5</span>
+            <strong>W&amp;W FINANCE DAILY INFOGRAPHIC</strong>
+            <span>Wire &amp; Wireless Co., Ltd. • SG Finance + Samsung Finance • BMA 1–5</span>
           </div>
           <p>
             “อนุมัติ” = ลูกค้ายื่นสมัครและได้รับอนุมัติวงเงินสินเชื่อ • “Used” =
