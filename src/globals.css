@@ -2484,3 +2484,35 @@ footer strong {
   }
 }
 
+/* Full branch-name readability: allow cards to grow with the complete name. */
+.missing-card {
+  align-items: start;
+  min-height: 78px;
+}
+
+.missing-card > span {
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.missing-card strong,
+.missing-card small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.missing-card strong {
+  line-height: 1.4;
+}
+
+.missing-card small {
+  line-height: 1.45;
+}
+
+.missing-finance-tags {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
