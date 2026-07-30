@@ -1,5 +1,6 @@
 name: Deploy Dashboard Finance
 
+# Trigger deployment after enabling GitHub Pages.
 on:
   push:
     branches:
