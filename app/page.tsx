@@ -647,7 +647,7 @@ export default function Home() {
                 />
               </span>
               <div className="brand-copy">
-                <strong>W&amp;W FINANCE PERFORMANCE</strong>
+                <strong>W&amp;W FINANCE PERFORMANCE BMA</strong>
                 <span>Wire &amp; Wireless Co., Ltd. • Daily intelligence</span>
               </div>
             </div>
@@ -1465,7 +1465,7 @@ export default function Home() {
 
         <footer>
           <div>
-            <strong>W&amp;W FINANCE DAILY INFOGRAPHIC</strong>
+            <strong>W&amp;W FINANCE PERFORMANCE BMA</strong>
             <span>Wire &amp; Wireless Co., Ltd. • SG Finance + Samsung Finance • BMA 1–5</span>
           </div>
           <p>
