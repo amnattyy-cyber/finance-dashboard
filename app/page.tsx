@@ -463,6 +463,22 @@ export default function Home() {
         .filter((item) => item.missingSg || item.missingSsf),
     [dashboardRows],
   );
+  const zeroInsertRows = useMemo(
+    () =>
+      dashboardRows
+        .map((row) => {
+          const sgInsert = sgExpected(row) ? Number(row.sg || 0) : 0;
+          const ssfInsert = Number(row.ssf || 0);
+          return { ...row, sgInsert, ssfInsert, totalInsert: sgInsert + ssfInsert };
+        })
+        .filter((row) => row.totalInsert === 0)
+        .sort(
+          (a, b) =>
+            a.bma.localeCompare(b.bma) ||
+            a.branch.localeCompare(b.branch),
+        ),
+    [dashboardRows],
+  );
   const visibleRows = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return dashboardRows.filter((row) => {
@@ -1286,6 +1302,69 @@ export default function Home() {
                 </div>
               </article>
             ))}
+          </div>
+        </section>
+
+
+        <section className="table-section zero-insert-section">
+          <div className="section-heading compact">
+            <div>
+              <span className="eyebrow dark">ZERO CARD INSERTION</span>
+              <h2>สาขาที่ยังไม่มีการเสียบบัตรเลย</h2>
+              <p>
+                SG + Samsung Finance = 0 ตามวันที่และพื้นที่ที่เลือก •
+                รวมทั้งสาขาที่ลงข้อมูลเป็น 0 และสาขาที่ยังลงข้อมูลไม่ครบ
+              </p>
+            </div>
+            <span className="count-badge zero-count">
+              0 ใบ • {zeroInsertRows.length} สาขา
+            </span>
+          </div>
+          <div className="table-wrap zero-table-wrap">
+            <table className="zero-insert-table">
+              <thead>
+                <tr>
+                  <th>พื้นที่ / สาขา</th>
+                  <th>ประเภทสาขา</th>
+                  <th className="sg-head">SG Finance</th>
+                  <th className="ssf-head">Samsung Finance</th>
+                  <th>ยอดรวม</th>
+                  <th>สถานะการลงข้อมูล</th>
+                </tr>
+              </thead>
+              <tbody>
+                {zeroInsertRows.length ? zeroInsertRows.map((row) => {
+                  const isSgExempt = !sgExpected(row);
+                  const reported = hasRelevantSubmission(row);
+                  return (
+                    <tr key={`zero-${row.code}`}>
+                      <td>
+                        <span className="area-label">{row.bma}</span>
+                        <strong>{row.branch}</strong>
+                        <small>{row.code}</small>
+                      </td>
+                      <td>{row.type}</td>
+                      <td className="zero-value metric-sg">
+                        {isSgExempt ? <span className="exempt-pill">ยกเว้น</span> : row.sgInsert}
+                      </td>
+                      <td className="zero-value metric-ssf">{row.ssfInsert}</td>
+                      <td><span className="zero-total">{row.totalInsert}</span></td>
+                      <td>
+                        <span className={`zero-status ${reported ? "reported" : "pending"}`}>
+                          {reported ? "ลงข้อมูลแล้ว" : "ยังลงข้อมูลไม่ครบ"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td className="empty-zero-cell" colSpan={6}>
+                      ทุกสาขามีรายการเสียบบัตรแล้ว
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
 
