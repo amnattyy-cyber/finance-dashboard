@@ -1271,6 +1271,74 @@ h1 span {
   background: var(--ssf);
 }
 
+
+.zero-count {
+  color: #b42336;
+  background: #fdebee;
+}
+
+.zero-table-wrap {
+  max-height: 520px;
+}
+
+.zero-insert-table {
+  min-width: 780px;
+}
+
+.zero-insert-table th {
+  white-space: nowrap;
+}
+
+.zero-insert-table td:nth-child(2) {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.zero-value {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.zero-total {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  color: #b42336;
+  background: #fdebee;
+  font-weight: 900;
+}
+
+.zero-status {
+  display: inline-flex;
+  min-width: 104px;
+  justify-content: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.zero-status.reported {
+  color: #087a54;
+  background: #e5f7f0;
+}
+
+.zero-status.pending {
+  color: #a45d04;
+  background: #fff2d7;
+}
+
+.empty-zero-cell {
+  width: auto !important;
+  padding: 34px !important;
+  color: var(--green);
+  text-align: center !important;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .branch-section {
   margin-top: 54px;
 }
