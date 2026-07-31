@@ -377,6 +377,28 @@ export default function Home() {
         : allBmaRows.filter((row) => row.bma === areaFilter),
     [allBmaRows, areaFilter],
   );
+  const previousDate = useMemo(
+    () =>
+      availableDates.find(
+        (date) => dateKey(date) < dateKey(reportDate),
+      ),
+    [availableDates, reportDate],
+  );
+  const previousDashboardRows = useMemo(
+    () =>
+      previousDate
+        ? allRows.filter(
+            (row) =>
+              (row.date ?? SNAPSHOT_DATE) === previousDate &&
+              (areaFilter === "ทั้งหมด" || row.bma === areaFilter),
+          )
+        : [],
+    [allRows, areaFilter, previousDate],
+  );
+  const previousTotal = useMemo(
+    () => summarize(previousDashboardRows),
+    [previousDashboardRows],
+  );
   const rankedBmaRows = useMemo(
     () =>
       [...bmaRows]
@@ -389,7 +411,7 @@ export default function Home() {
         .map((row, index) => ({ ...row, rank: index + 1 })),
     [bmaRows],
   );
-  const branchPerformance = useMemo(
+  const branchMetrics = useMemo(
     () =>
       dashboardRows
         .map((row) => {
@@ -413,10 +435,19 @@ export default function Home() {
             achRate: target ? (totalInsert / target) * 100 : 0,
             approvalRate: totalInsert ? (approved / totalInsert) * 100 : 0,
             usedRate: approved ? (used / approved) * 100 : 0,
+            missingFinance:
+              (sgExpected(row) && !sgSubmitted(row) ? 1 : 0) +
+              (!ssfSubmitted(row) ? 1 : 0),
+            zeroInsert: totalInsert === 0,
+            targetGap: Math.max(target - totalInsert, 0),
+            pendingUsed: Math.max(approved - used, 0),
           };
-        })
-        .filter((row) => row.totalInsert > 0),
+        }),
     [dashboardRows],
+  );
+  const branchPerformance = useMemo(
+    () => branchMetrics.filter((row) => row.totalInsert > 0),
+    [branchMetrics],
   );
   const topQtyBranches = useMemo(
     () =>
@@ -491,12 +522,56 @@ export default function Home() {
       );
     });
   }, [dashboardRows, query]);
-  const leadingBma = [...bmaRows].sort((a, b) => b.total - a.total)[0];
   const mostMissingBma = [...bmaRows].sort(
     (a, b) => b.sgMissing + b.ssfMissing - (a.sgMissing + a.ssfMissing),
   )[0];
+  const bestArea = [...bmaRows].sort(
+    (a, b) =>
+      b.combinedTargetRate - a.combinedTargetRate ||
+      b.total - a.total ||
+      a.bma.localeCompare(b.bma),
+  )[0];
+  const watchArea = [...bmaRows].sort(
+    (a, b) =>
+      a.combinedTargetRate - b.combinedTargetRate ||
+      b.sgMissing + b.ssfMissing - (a.sgMissing + a.ssfMissing) ||
+      a.total - b.total ||
+      a.bma.localeCompare(b.bma),
+  )[0];
+  const executiveTopBranches = topAchBranches.slice(0, 3);
+  const watchlistBranches = [...branchMetrics]
+    .sort(
+      (a, b) =>
+        b.missingFinance - a.missingFinance ||
+        Number(b.zeroInsert) - Number(a.zeroInsert) ||
+        a.achRate - b.achRate ||
+        b.targetGap - a.targetGap ||
+        a.branch.localeCompare(b.branch),
+    )
+    .slice(0, 3);
   const pendingUse = Math.max(total.approved - total.used, 0);
   const approvalGap = Math.max(total.total - total.approved, 0);
+  const trendDelta = total.total - previousTotal.total;
+  const trendRate = previousTotal.total
+    ? (trendDelta / previousTotal.total) * 100
+    : null;
+  const executiveRecommendations = [
+    total.sgMissing + total.ssfMissing > 0
+      ? `ติดตามการลงข้อมูลที่ขาด ${total.sgMissing + total.ssfMissing} จุด เพื่อให้ฐานรายวันครบ`
+      : "",
+    zeroInsertRows.length > 0
+      ? `กำหนดแผนรายสาขาให้ ${zeroInsertRows.length} สาขาที่ยอดเสียบบัตรยังเป็น 0`
+      : "",
+    pendingUse > 0
+      ? `เร่งปิดการขาย ${pendingUse} รายการที่อนุมัติแล้วแต่ยังไม่ Used`
+      : "",
+    approvalGap > 0
+      ? `ทบทวนเคสไม่อนุมัติ ${approvalGap} รายการและสาเหตุหลักกับทีมหน้าร้าน`
+      : "",
+    areaFilter === "ทั้งหมด" && bestArea
+      ? `ถอดวิธีทำงานจาก ${bestArea.bma} แล้วขยายไปยังพื้นที่ที่ต่ำกว่าเป้า`
+      : "",
+  ].filter(Boolean).slice(0, 3);
   const areaLabel = areaFilter === "ทั้งหมด" ? "ทุกพื้นที่" : areaFilter;
   const selectArea = useCallback((value: string) => {
     setAreaFilter(value);
@@ -515,6 +590,15 @@ export default function Home() {
               `Conversion SG: เสียบบัตร ${total.sg} → อนุมัติ ${total.sgApproved} (${percent(total.sgApprovalRate)}) → Used ${total.sgUsed} (${percent(total.sgUsedRate)} ของอนุมัติ)`,
               `Conversion Samsung: เสียบบัตร ${total.ssf} → อนุมัติ ${total.ssfApproved} (${percent(total.ssfApprovalRate)}) → Used ${total.ssfUsed} (${percent(total.ssfUsedRate)} ของอนุมัติ)`,
               `MTD: SG Finance ${total.sgMtd} • Samsung Finance ${total.ssfMtd} • รวม ${total.mtdTotal} รายการ`,
+              `ภาพรวมรายวัน: เสียบบัตรรวม ${total.total}/${total.combinedTarget} รายการ (${percent(total.combinedTargetRate)} TG) • อนุมัติ ${percent(total.approvalRate)} • Used ${percent(total.usedRate)} ของอนุมัติ`,
+              `Area ผลงานดี: ${bestArea.bma} ${bestArea.total} รายการ (${percent(bestArea.combinedTargetRate)} TG)`,
+              `Area เร่งติดตาม: ${watchArea.bma} ${watchArea.total} รายการ (${percent(watchArea.combinedTargetRate)} TG) • ยังไม่ลงข้อมูล ${watchArea.sgMissing + watchArea.ssfMissing} จุด`,
+              `สาขา Top: ${executiveTopBranches.map((row, index) => `${index + 1}. ${row.branch} ${percent(row.achRate)} TG`).join(" • ") || "ยังไม่มีสาขาที่มียอด"}`,
+              `สาขาเฝ้าระวัง: ${watchlistBranches.map((row, index) => `${index + 1}. ${row.branch} (${row.missingFinance ? `ขาดข้อมูล ${row.missingFinance} Finance` : row.zeroInsert ? "ยอด 0" : `${percent(row.achRate)} TG`})`).join(" • ") || "ไม่มี"}`,
+              previousDate
+                ? `แนวโน้มเทียบ ${previousDate}: ยอดรวม ${trendDelta >= 0 ? "+" : ""}${trendDelta} รายการ${trendRate == null ? "" : ` (${trendRate >= 0 ? "+" : ""}${percent(trendRate)})`} • Conversion Used ${percent(total.usedRate)}`
+                : "แนวโน้ม: ยังไม่มีข้อมูลวันก่อนหน้าในตัวกรองปัจจุบัน",
+              `ข้อเสนอแนะ: ${executiveRecommendations.join(" • ") || "รักษามาตรฐานการติดตามและปิดการขายต่อเนื่อง"}`,
               ...bmaRows.map(
                 (bma) =>
                   `${bma.bma}: SG ${bma.sg}/${bma.sgTarget} (${percent(bma.sgTargetRate)}) • Samsung ${bma.ssf}/${bma.ssfTarget} (${percent(bma.ssfTargetRate)}) • รวม ${bma.total} • MTD SG ${bma.sgMtd} / Samsung ${bma.ssfMtd}`,
@@ -573,16 +657,24 @@ export default function Home() {
     },
     [
       bmaRows,
+      bestArea,
+      executiveRecommendations,
+      executiveTopBranches,
       mostMissingBma.bma,
       mostMissingBma.sgMissing,
       mostMissingBma.ssfMissing,
       pendingUse,
+      previousDate,
       topAchBranches,
       topQtyBranches,
       reportDate,
       areaLabel,
       total,
+      trendDelta,
+      trendRate,
       visibleRows,
+      watchArea,
+      watchlistBranches,
     ],
   );
 
@@ -1244,37 +1336,117 @@ export default function Home() {
           <article className="panel insight-panel">
             <div className="panel-title">
               <div>
-                <span className="eyebrow dark">EXECUTIVE INSIGHT</span>
-                <h3>วิเคราะห์และสรุปปัญหา</h3>
+                <span className="eyebrow dark">EXECUTIVE INSIGHT • AUTO-GENERATED</span>
+                <h3>ข้อมูลเชิงลึกสำหรับผู้บริหาร</h3>
+                <p>คำนวณใหม่อัตโนมัติตามวันที่และตัวกรอง {areaLabel}</p>
               </div>
+              <span className="insight-live">LIVE ANALYSIS</span>
             </div>
-            <div className="insight-list">
-              <div className="insight success">
-                <span>01</span>
+            <div className="executive-insight-grid">
+              <section className="executive-insight-card overview">
+                <div className="insight-card-heading">
+                  <span>01</span>
+                  <strong>ภาพรวม (รายวัน)</strong>
+                </div>
+                <div className="insight-primary">
+                  <strong>{number.format(total.total)}</strong>
+                  <span>รายการ • {percent(total.combinedTargetRate)} TG</span>
+                </div>
                 <p>
-                  <strong>{leadingBma.bma}</strong>{" "}
-                  {areaFilter === "ทั้งหมด" ? "มียอดเสียบบัตรสูงสุด" : "มียอดเสียบบัตร"}
-                  {" "}{leadingBma.total} รายการ — SG {percent(leadingBma.sgTargetRate)} TG
-                  และ Samsung {percent(leadingBma.ssfTargetRate)} TG
+                  อนุมัติ {number.format(total.approved)} รายการ ({percent(total.approvalRate)})
+                  • Used {number.format(total.used)} รายการ ({percent(total.usedRate)} ของอนุมัติ)
                 </p>
-              </div>
-              <div className="insight danger">
-                <span>02</span>
+              </section>
+
+              <section className="executive-insight-card success">
+                <div className="insight-card-heading">
+                  <span>02</span>
+                  <strong>Area ที่ทำผลงานได้ดี</strong>
+                </div>
+                <div className="insight-primary">
+                  <strong>{bestArea.bma}</strong>
+                  <span>{number.format(bestArea.total)} รายการ</span>
+                </div>
                 <p>
-                  <strong>{mostMissingBma.bma}</strong>{" "}
-                  {areaFilter === "ทั้งหมด" ? "ต้องเร่งติดตามมากที่สุด" : "มีสาขาที่ยังต้องติดตาม"}
-                  {" "}— SG ยังไม่ลงข้อมูล {mostMissingBma.sgMissing} และ Samsung{" "}
-                  {mostMissingBma.ssfMissing} สาขา
+                  รวม {percent(bestArea.combinedTargetRate)} TG • SG {percent(bestArea.sgTargetRate)}
+                  • Samsung {percent(bestArea.ssfTargetRate)}
                 </p>
-              </div>
-              <div className="insight warning">
-                <span>03</span>
-                <p>มี <strong>{pendingUse} รายการ</strong> ที่อนุมัติวงเงินแล้วแต่ยังไม่ Used ควรติดตามเพื่อปิดการขาย</p>
-              </div>
-              <div className="insight info">
-                <span>04</span>
-                <p>SG ยกเว้นการรายงาน 2 สาขา: <strong>80100484 และ 80100836</strong> เนื่องจากถูกระงับการใช้งาน</p>
-              </div>
+              </section>
+
+              <section className="executive-insight-card danger">
+                <div className="insight-card-heading">
+                  <span>03</span>
+                  <strong>Area ที่ควรเร่งติดตาม</strong>
+                </div>
+                <div className="insight-primary">
+                  <strong>{watchArea.bma}</strong>
+                  <span>{percent(watchArea.combinedTargetRate)} TG</span>
+                </div>
+                <p>
+                  ยอด {number.format(watchArea.total)} รายการ • ยังไม่ลงข้อมูล SG/SSF รวม{" "}
+                  {watchArea.sgMissing + watchArea.ssfMissing} จุด
+                </p>
+              </section>
+
+              <section className="executive-insight-card top-branch">
+                <div className="insight-card-heading">
+                  <span>04</span>
+                  <strong>สาขา Top ที่ทำได้ดี</strong>
+                </div>
+                <ol className="insight-ranking">
+                  {executiveTopBranches.map((row) => (
+                    <li key={`insight-top-${row.code}`}>
+                      <span>{row.branch}</span>
+                      <strong>{percent(row.achRate)} TG</strong>
+                    </li>
+                  ))}
+                  {!executiveTopBranches.length && <li><span>ยังไม่มีสาขาที่มียอด</span></li>}
+                </ol>
+              </section>
+
+              <section className="executive-insight-card warning">
+                <div className="insight-card-heading">
+                  <span>05</span>
+                  <strong>สาขาเฝ้าระวัง</strong>
+                </div>
+                <ol className="insight-ranking watchlist">
+                  {watchlistBranches.map((row) => (
+                    <li key={`insight-watch-${row.code}`}>
+                      <span>{row.branch}</span>
+                      <strong>
+                        {row.missingFinance
+                          ? `ขาดข้อมูล ${row.missingFinance} Finance`
+                          : row.zeroInsert
+                            ? "ยอดเสียบบัตร 0"
+                            : `${percent(row.achRate)} TG`}
+                      </strong>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+
+              <section className="executive-insight-card trend">
+                <div className="insight-card-heading">
+                  <span>06</span>
+                  <strong>แนวโน้มและข้อเสนอแนะ</strong>
+                </div>
+                <div className={`trend-summary ${trendDelta >= 0 ? "up" : "down"}`}>
+                  <strong>
+                    {previousDate
+                      ? `${trendDelta >= 0 ? "▲" : "▼"} ${Math.abs(trendDelta)} รายการ`
+                      : "รอข้อมูลเปรียบเทียบ"}
+                  </strong>
+                  <span>
+                    {previousDate
+                      ? `เทียบ ${previousDate}${trendRate == null ? "" : ` • ${trendRate >= 0 ? "+" : ""}${percent(trendRate)}`}`
+                      : "ยังไม่มีข้อมูลวันก่อนหน้า"}
+                  </span>
+                </div>
+                <ul className="recommendation-list">
+                  {executiveRecommendations.map((item) => <li key={item}>{item}</li>)}
+                  {!executiveRecommendations.length && <li>รักษามาตรฐานการติดตามและปิดการขายต่อเนื่อง</li>}
+                </ul>
+              </section>
             </div>
             <button className="button copy-summary" onClick={() => copyText("summary")}>
               {copied === "summary" ? "✓ คัดลอกแล้ว" : "คัดลอกสรุปเพื่อส่งรายงาน"}
