@@ -810,7 +810,7 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>พื้นที่</th>
-                  <th className="sg-head">SG<br />ฐานสาขา</th>
+                  <th className="sg-head">SG<br />จำนวนสาขา</th>
                   <th className="sg-head">SG<br />ลงข้อมูล</th>
                   <th className="sg-head">SG<br />ยังไม่ลง</th>
                   <th className="sg-head">SG<br />เสียบบัตร</th>
@@ -819,7 +819,7 @@ export default function Home() {
                   <th className="sg-head">SG % TG</th>
                   <th className="ssf-head">Samsung TG</th>
                   <th className="ssf-head">Samsung % TG</th>
-                  <th className="ssf-head">Samsung<br />ฐานสาขา</th>
+                  <th className="ssf-head">Samsung<br />จำนวนสาขา</th>
                   <th className="ssf-head">Samsung<br />ลงข้อมูล</th>
                   <th className="ssf-head">Samsung<br />ยังไม่ลง</th>
                   <th>ไม่ระบุ<br />ผู้ลงข้อมูล</th>
