@@ -23,6 +23,7 @@ const BMA_SHEETS = BMA_AREAS.map((bma) => ({
   bma,
   sheet: `ลงยอดรวม ${bma}`,
 }));
+const MTD_START_DATE = "01/08/2026";
 
 const SG_EXEMPT_CODES = new Set(["80100484", "80100836"]);
 const SNAPSHOT_SG_SUBMITTED = new Set([
@@ -260,6 +261,7 @@ export default function Home() {
   const [areaFilter, setAreaFilter] = useState("ทั้งหมด");
   const [copied, setCopied] = useState("");
   const manualDate = useRef(false);
+  const showMtd = dateKey(reportDate) >= dateKey(MTD_START_DATE);
 
   const refresh = useCallback(async () => {
     setSource("loading");
@@ -589,7 +591,9 @@ export default function Home() {
               `อนุมัติ ${total.approved} รายการ (${percent(total.approvalRate)}) • Used ${total.used} รายการ (${percent(total.usedRate)})`,
               `Conversion SG: เสียบบัตร ${total.sg} → อนุมัติ ${total.sgApproved} (${percent(total.sgApprovalRate)}) → Used ${total.sgUsed} (${percent(total.sgUsedRate)} ของอนุมัติ)`,
               `Conversion Samsung: เสียบบัตร ${total.ssf} → อนุมัติ ${total.ssfApproved} (${percent(total.ssfApprovalRate)}) → Used ${total.ssfUsed} (${percent(total.ssfUsedRate)} ของอนุมัติ)`,
-              `MTD: SG Finance ${total.sgMtd} • Samsung Finance ${total.ssfMtd} • รวม ${total.mtdTotal} รายการ`,
+              showMtd
+                ? `MTD: SG Finance ${total.sgMtd} • Samsung Finance ${total.ssfMtd} • รวม ${total.mtdTotal} รายการ`
+                : "",
               `ภาพรวมรายวัน: เสียบบัตรรวม ${total.total}/${total.combinedTarget} รายการ (${percent(total.combinedTargetRate)} TG) • อนุมัติ ${percent(total.approvalRate)} • Used ${percent(total.usedRate)} ของอนุมัติ`,
               `Area ผลงานดี: ${bestArea.bma} ${bestArea.total} รายการ (${percent(bestArea.combinedTargetRate)} TG)`,
               `Area เร่งติดตาม: ${watchArea.bma} ${watchArea.total} รายการ (${percent(watchArea.combinedTargetRate)} TG) • ยังไม่ลงข้อมูล ${watchArea.sgMissing + watchArea.ssfMissing} จุด`,
@@ -601,13 +605,13 @@ export default function Home() {
               `ข้อเสนอแนะ: ${executiveRecommendations.join(" • ") || "รักษามาตรฐานการติดตามและปิดการขายต่อเนื่อง"}`,
               ...bmaRows.map(
                 (bma) =>
-                  `${bma.bma}: SG ${bma.sg}/${bma.sgTarget} (${percent(bma.sgTargetRate)}) • Samsung ${bma.ssf}/${bma.ssfTarget} (${percent(bma.ssfTargetRate)}) • รวม ${bma.total} • MTD SG ${bma.sgMtd} / Samsung ${bma.ssfMtd}`,
+                  `${bma.bma}: SG ${bma.sg}/${bma.sgTarget} (${percent(bma.sgTargetRate)}) • Samsung ${bma.ssf}/${bma.ssfTarget} (${percent(bma.ssfTargetRate)}) • รวม ${bma.total}${showMtd ? ` • MTD SG ${bma.sgMtd} / Samsung ${bma.ssfMtd}` : ""}`,
               ),
               `จุดติดตาม: ${mostMissingBma.bma} มีรายการขาดรายงานรวม SG/SSF มากที่สุด ${mostMissingBma.sgMissing + mostMissingBma.ssfMissing} จุด • อนุมัติแล้วแต่ยังไม่ Used ${pendingUse} รายการ • ไม่ระบุชื่อผู้ลงข้อมูล ${total.missingReporter} สาขา`,
-              `Top QTY: ${topQtyBranches.map((row, index) => `${index + 1}. ${row.branch} ${row.totalInsert} รายการ (SG ${row.sg} / Samsung ${row.ssf} / MTD ${row.mtdTotal})`).join(" • ")}`,
-              `Top % Ach: ${topAchBranches.map((row, index) => `${index + 1}. ${row.branch} ${percent(row.achRate)} (SG ${row.sg} / Samsung ${row.ssf} / MTD ${row.mtdTotal})`).join(" • ")}`,
+              `Top QTY: ${topQtyBranches.map((row, index) => `${index + 1}. ${row.branch} ${row.totalInsert} รายการ (SG ${row.sg} / Samsung ${row.ssf}${showMtd ? ` / MTD ${row.mtdTotal}` : ""})`).join(" • ")}`,
+              `Top % Ach: ${topAchBranches.map((row, index) => `${index + 1}. ${row.branch} ${percent(row.achRate)} (SG ${row.sg} / Samsung ${row.ssf}${showMtd ? ` / MTD ${row.mtdTotal}` : ""})`).join(" • ")}`,
               `หมายเหตุ SG: Shopcode 80100484 และ 80100836 ถูกระงับการใช้งาน จึงไม่รวมใน TG และจำนวนสาขาที่ต้องรายงาน SG`,
-            ].join("\n")
+            ].filter(Boolean).join("\n")
           : [
               [
                 "พื้นที่",
@@ -624,8 +628,7 @@ export default function Home() {
                 "SSF อนุมัติ",
                 "SSF Used",
                 "Samsung % TG",
-                "SG MTD",
-                "Samsung MTD",
+                ...(showMtd ? ["SG MTD", "Samsung MTD"] : []),
                 "ชื่อผู้ลงข้อมูล",
               ].join("\t"),
               ...visibleRows.map((row) => {
@@ -645,8 +648,12 @@ export default function Home() {
                   row.ssfApproved,
                   row.ssfUsed,
                   percent(row.target ? (row.ssf / row.target) * 100 : 0),
-                  isSgExempt ? "-" : Number(row.sgMtd || 0),
-                  Number(row.ssfMtd || 0),
+                  ...(showMtd
+                    ? [
+                        isSgExempt ? "-" : Number(row.sgMtd || 0),
+                        Number(row.ssfMtd || 0),
+                      ]
+                    : []),
                   row.reporter || "-",
                 ].join("\t");
               }),
@@ -668,6 +675,7 @@ export default function Home() {
       topAchBranches,
       topQtyBranches,
       reportDate,
+      showMtd,
       areaLabel,
       total,
       trendDelta,
@@ -1180,9 +1188,9 @@ export default function Home() {
                       <th className="ssf-head">Samsung</th>
                       <th>รวม</th>
                       <th>% Ach</th>
-                      <th className="sg-head">SG MTD</th>
-                      <th className="ssf-head">Samsung MTD</th>
-                      <th>MTD รวม</th>
+                      {showMtd && <th className="sg-head">SG MTD</th>}
+                      {showMtd && <th className="ssf-head">Samsung MTD</th>}
+                      {showMtd && <th>MTD รวม</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -1195,9 +1203,9 @@ export default function Home() {
                         <td className="metric-ssf">{bma.ssf}</td>
                         <td className="rank-primary">{bma.total}</td>
                         <td><span className="rank-rate">{percent(bma.combinedTargetRate)}</span></td>
-                        <td className="metric-sg">{bma.sgMtd}</td>
-                        <td className="metric-ssf">{bma.ssfMtd}</td>
-                        <td><strong>{bma.mtdTotal}</strong></td>
+                        {showMtd && <td className="metric-sg">{bma.sgMtd}</td>}
+                        {showMtd && <td className="metric-ssf">{bma.ssfMtd}</td>}
+                        {showMtd && <td><strong>{bma.mtdTotal}</strong></td>}
                       </tr>
                     ))}
                   </tbody>
@@ -1224,7 +1232,7 @@ export default function Home() {
                         <span className="finance-breakdown">
                           <i className="sg-chip">SG {row.sg}</i>
                           <i className="ssf-chip">Samsung {row.ssf}</i>
-                          <i className="mtd-chip">MTD {row.mtdTotal}</i>
+                          {showMtd && <i className="mtd-chip">MTD {row.mtdTotal}</i>}
                         </span>
                       </div>
                       <div className="leader-value">
@@ -1254,7 +1262,7 @@ export default function Home() {
                         <span className="finance-breakdown">
                           <i className="sg-chip">SG {row.sg}</i>
                           <i className="ssf-chip">Samsung {row.ssf}</i>
-                          <i className="mtd-chip">MTD {row.mtdTotal}</i>
+                          {showMtd && <i className="mtd-chip">MTD {row.mtdTotal}</i>}
                         </span>
                       </div>
                       <div className="leader-value ach-value">
